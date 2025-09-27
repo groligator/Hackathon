@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Opened Messages</title>
+</head>
+<body>
+    <h1>Messages That Have Opened</h1>
+    {% for msg in messages %}
+        {% if msg.is_open() %}
+            <div style="border:1px solid #000; padding:10px; margin:10px;">
+                <p><strong>{{ msg.username }}</strong> wrote:</p>
+                <p>{{ msg.content }}</p>
+                <p><em>Opened on: {{ msg.open_date.date() }}</em></p>
+            </div>
+        {% endif %}
+    {% endfor %}
+    <p><a href="{{ url_for('index') }}">Home</a></p>
+</body>
+</html>
