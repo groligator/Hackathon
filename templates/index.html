@@ -1,11 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Time Capsule</title>
+
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
-    <h1>Welcome to the Time Capsule!</h1>
-    <p><a href="{{ url_for('submit') }}">Submit a new message</a></p>
-    <p><a href="{{ url_for('messages') }}">View opened messages</a></p>
+<body class="bg-light">
+
+<div class="container text-center mt-5">
+    <h1 class="mb-4">🌟 Time Capsule 🌟</h1>
+    <p class="lead">Send messages to the future and see messages from others!</p>
+    <a href="{{ url_for('submit') }}" class="btn btn-primary m-2">Submit a Message</a>
+    <a href="{{ url_for('messages') }}" class="btn btn-secondary m-2">View Opened Messages</a>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Custom JS -->
+<script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
