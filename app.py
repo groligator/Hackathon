@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, timezone
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///timecapsule.db'
@@ -14,15 +14,13 @@ class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    open_date = db.Column(db.DateTime, nullable=False)  # UTC-aware
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))  # UTC-aware
+    open_date_iso = db.Column(db.String, nullable=False)  # UTC ISO string
+    created_at_iso = db.Column(db.String, nullable=False)  # UTC ISO string
 
     def is_open(self):
-        now_utc = datetime.now(timezone.utc)
-        open_date_aware = self.open_date
-        if self.open_date.tzinfo is None:
-            open_date_aware = self.open_date.replace(tzinfo=timezone.utc)
-        return now_utc >= open_date_aware
+        now_utc = datetime.utcnow()
+        open_dt = datetime.fromisoformat(self.open_date_iso)
+        return now_utc >= open_dt
 
 # -----------------------
 # Routes
@@ -37,13 +35,20 @@ def submit():
     if request.method == 'POST':
         username = request.form['username']
         content = request.form['content']
-        open_date_str = request.form['open_date']  # format: YYYY-MM-DD
+        open_date_str = request.form['open_date']  # YYYY-MM-DD
 
-        # Convert to UTC-aware datetime at midnight
+        # Convert date to UTC ISO string at midnight
         open_date = datetime.strptime(open_date_str, '%Y-%m-%d')
-        open_date = open_date.replace(tzinfo=timezone.utc)
+        open_date_iso = open_date.isoformat()
 
-        message = Message(username=username, content=content, open_date=open_date)
+        created_at_iso = datetime.utcnow().isoformat()
+
+        message = Message(
+            username=username,
+            content=content,
+            open_date_iso=open_date_iso,
+            created_at_iso=created_at_iso
+        )
         db.session.add(message)
         db.session.commit()
         return redirect(url_for('messages'))
@@ -53,28 +58,22 @@ def submit():
 
 @app.route('/messages')
 def messages():
-    all_messages = Message.query.order_by(Message.created_at.desc()).all()
-    now_utc = datetime.now(timezone.utc)
+    all_messages = Message.query.order_by(Message.id.desc()).all()  # newest first
+    now_iso = datetime.utcnow().isoformat()
 
     unlocked_messages = []
     locked_messages = []
 
-    # Precompute UTC ISO strings for the template
     for msg in all_messages:
-        msg.created_at_iso = msg.created_at.astimezone(timezone.utc).isoformat()
-        msg.open_date_iso = msg.open_date.astimezone(timezone.utc).isoformat()
         if msg.is_open():
             unlocked_messages.append(msg)
         else:
             locked_messages.append(msg)
 
-    now_iso = now_utc.isoformat()
-
     return render_template('messages.html',
                            unlocked_messages=unlocked_messages,
                            locked_messages=locked_messages,
                            now_iso=now_iso)
-
 
 # -----------------------
 # Main
