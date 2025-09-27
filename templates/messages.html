@@ -67,23 +67,25 @@
 
 <!-- JS: Convert UTC ISO timestamps to local time -->
 <script>
-  function formatLocalDateTime(utcString) {
-    const date = new Date(utcString); // JS parses ISO string as UTC
-    return date.toLocaleString(undefined, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true
-    });
-  }
-
-  document.querySelectorAll(".datetime").forEach(el => {
-    const utcString = el.getAttribute("data-utc");
-    if (utcString) {
-        el.textContent = formatLocalDateTime(utcString);
+    function formatLocalDateTime(utcString) {
+        // Ensure browser parses as UTC
+        const safeUtcString = utcString.replace('Z', '+00:00');
+        const date = new Date(safeUtcString);
+        return date.toLocaleString(undefined, {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true
+        });
     }
-  });
+
+    document.querySelectorAll(".datetime").forEach(el => {
+        const utcString = el.getAttribute("data-utc");
+        if (utcString) {
+            el.textContent = formatLocalDateTime(utcString);
+        }
+    });
 </script>
 {% endblock %}

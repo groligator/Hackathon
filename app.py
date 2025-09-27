@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timezone
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///timecapsule.db'
@@ -14,12 +14,15 @@ class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    open_date_iso = db.Column(db.String, nullable=False)  # UTC ISO string
-    created_at_iso = db.Column(db.String, nullable=False)  # UTC ISO string
+    open_date_iso = db.Column(db.String, nullable=False)  # UTC ISO string with Z
+    created_at_iso = db.Column(db.String, nullable=False)  # UTC ISO string with Z
 
     def is_open(self):
-        now_utc = datetime.utcnow()
-        open_dt = datetime.fromisoformat(self.open_date_iso)
+        now_utc = datetime.now(timezone.utc)
+        open_dt = datetime.fromisoformat(self.open_date_iso.replace('Z', '+00:00'))
+        # Ensure open_dt is timezone-aware
+        if open_dt.tzinfo is None:
+            open_dt = open_dt.replace(tzinfo=timezone.utc)
         return now_utc >= open_dt
 
 # -----------------------
@@ -37,11 +40,12 @@ def submit():
         content = request.form['content']
         open_date_str = request.form['open_date']  # YYYY-MM-DD
 
-        # Convert date to UTC ISO string at midnight
+        # Convert date to UTC ISO string at midnight with Z
         open_date = datetime.strptime(open_date_str, '%Y-%m-%d')
-        open_date_iso = open_date.isoformat()
+        open_date_iso = datetime.combine(open_date.date(), datetime.min.time(), tzinfo=timezone.utc).isoformat().replace('+00:00', 'Z')
 
-        created_at_iso = datetime.utcnow().isoformat()
+        # Current UTC time as ISO string with Z
+        created_at_iso = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
 
         message = Message(
             username=username,
@@ -59,7 +63,7 @@ def submit():
 @app.route('/messages')
 def messages():
     all_messages = Message.query.order_by(Message.id.desc()).all()  # newest first
-    now_iso = datetime.utcnow().isoformat()
+    now_iso = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
 
     unlocked_messages = []
     locked_messages = []
@@ -74,6 +78,7 @@ def messages():
                            unlocked_messages=unlocked_messages,
                            locked_messages=locked_messages,
                            now_iso=now_iso)
+
 
 # -----------------------
 # Main
