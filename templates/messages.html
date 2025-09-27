@@ -2,27 +2,88 @@
 {% block title %}Messages - Time Capsule{% endblock %}
 
 {% block content %}
-<h1 class="text-center mb-4">📜 Opened Messages</h1>
+<h1 class="text-center mb-4">📜 Time Capsules</h1>
 
-{% if messages %}
-    <div class="row justify-content-center">
-        {% for msg in messages %}
-            {% if msg.is_open() %}
-            <div class="col-md-8">
+{% if unlocked_messages or locked_messages %}
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-3" id="capsuleTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="unlocked-tab" data-bs-toggle="tab" data-bs-target="#unlocked" type="button" role="tab">
+                🔓 Unlocked
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="locked-tab" data-bs-toggle="tab" data-bs-target="#locked" type="button" role="tab">
+                🔒 Locked
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="capsuleTabsContent">
+        <!-- Unlocked Messages -->
+        <div class="tab-pane fade show active" id="unlocked" role="tabpanel">
+            {% if unlocked_messages %}
+                {% for msg in unlocked_messages %}
                 <div class="card shadow-sm mb-4">
                     <div class="card-body">
-                        <h5 class="card-title">{{ msg.username }}</h5>
+                        <h5 class="card-title">{{ msg.username }} 🔓</h5>
                         <p class="card-text">{{ msg.content }}</p>
+                        <hr>
                         <p class="text-muted small">
-                            Opened on: {{ now.strftime('%B %d, %Y at %I:%M %p') }}
+                            📩 Sent on: <span class="datetime" data-utc="{{ msg.created_at_iso }}"></span><br>
+                            🔓 Opened on: <span class="datetime" data-utc="{{ now_iso }}"></span>
                         </p>
                     </div>
                 </div>
-            </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-center text-muted">No unlocked messages yet.</p>
             {% endif %}
-        {% endfor %}
+        </div>
+
+        <!-- Locked Messages -->
+        <div class="tab-pane fade" id="locked" role="tabpanel">
+            {% if locked_messages %}
+                {% for msg in locked_messages %}
+                <div class="card shadow-sm mb-4 bg-light text-muted">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ msg.username }} 🔒</h5>
+                        <p class="fst-italic">This capsule is locked until:</p>
+                        <p class="fw-bold">
+                            ⏳ <span class="datetime" data-utc="{{ msg.open_date_iso }}"></span>
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-center text-muted">No locked messages at the moment.</p>
+            {% endif %}
+        </div>
     </div>
+
 {% else %}
     <p class="text-center text-muted">No messages yet. Be the first to submit one!</p>
 {% endif %}
+
+<!-- JS: Convert UTC timestamps to local time -->
+<script>
+  function formatLocalDateTime(utcString) {
+    const date = new Date(utcString); // JS parses +00:00 correctly
+    return date.toLocaleString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true
+    });
+  }
+
+  document.querySelectorAll(".datetime").forEach(el => {
+    const utcString = el.getAttribute("data-utc");
+    if (utcString) {
+        el.textContent = formatLocalDateTime(utcString);
+    }
+  });
+</script>
 {% endblock %}

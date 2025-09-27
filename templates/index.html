@@ -2,17 +2,10 @@
 {% block title %}Home - Time Capsule{% endblock %}
 
 {% block content %}
-<div class="col-md-8 mx-auto text-center">
-    <div class="card shadow-lg rounded-4">
-        <div class="card-body p-5">
-            <h1 class="mb-3">🌟 Time Capsule 🌟</h1>
-            <p class="lead text-muted mb-4">
-                Send messages to the future and discover what others left behind.
-            </p>
-
-            <a href="{{ url_for('submit') }}" class="btn btn-primary m-2 px-4 py-2">✍️ Submit a Message</a>
-            <a href="{{ url_for('messages') }}" class="btn btn-secondary m-2 px-4 py-2">📜 View Messages</a>
-        </div>
-    </div>
+<div class="text-center mt-5">
+    <h1>Welcome to the Time Capsule!</h1>
+    <p>Store messages and unlock them in the future.</p>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('submit') }}">Create a Capsule</a>
+    <a class="btn btn-secondary btn-lg" href="{{ url_for('messages') }}">View Messages</a>
 </div>
 {% endblock %}
